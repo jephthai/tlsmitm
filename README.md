@@ -3,6 +3,8 @@ tlsmitm
 
 TLS relay / proxy for analyzing contents of TLS-protected network communications.  This isn't intended to supersede other excellent tools, such as Burp Suite.  All tools have their place, but sometimes you want complete control.  For example, Burp Suite is just for HTTPS, so if you are looking at something that uses another protocol over TLS, then it won't be so helpful.
 
+![TLSMITM in action](https://raw.githubusercontent.com/jephthai/tlsmitm/master/doc/tlsmitm.png)
+
 This is a generic TLS relay.  It has the following main features:
 
   1. Output all traffic to a file
