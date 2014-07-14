@@ -61,11 +61,24 @@ module.exports.screen = function(relay, direction, data) {
     printer(clientid + printreadable(data, clientid.length + 9));
 }
 
+function encodeIP(ip) {
+    var octets = ip.split(/\./);
+    console.log(octets);
+    out.yellow([parseInt(octets[0]),
+		parseInt(octets[1]),
+		parseInt(octets[2]),
+		parseInt(octets[3])]);
+    return new Buffer([parseInt(octets[0]),
+		       parseInt(octets[1]),
+		       parseInt(octets[2]),
+		       parseInt(octets[3])]);
+}
+
 module.exports.filer = function(filename) {
     var outclient = fs.openSync(filename, "w");
     
     this.send = function(relay, direction, data) {
-	//
+
 	// a header needs the following fields:
 	//
 	// timestamp   -- UNIX timestamp as 32-bit integer
@@ -76,20 +89,20 @@ module.exports.filer = function(filename) {
 	// server IP   -- 32-bit integer (IP address)
 	// server port -- 16-bit integer
 	// bytes       -- 32-bit integer denoting message length
-	//
+
 	var header     = new Buffer(29);
-	var clientip   = new Buffer(relay.clientip.split(/\./).map(function(x) { parseInt(x) }));
+	var clientip   = encodeIP(relay.clientip);
 	var clientport = relay.clientport;
-	var serverip   = new Buffer(relay.serverip.split(/\./).map(function(x) { parseInt(x) }));
+	var serverip   = encodeIP(relay.serverip);
 	var serverport = relay.serverport;
 	
 	header.write("MESG"                               , 0);
 	header.writeUInt32LE((new moment()).unix()        , 4);
 	header.writeUInt32LE(relay.id                     , 8);
 	header.writeUInt8(direction == "client" ? 0 : 1   , 12);
-	header.copy(clientip, 0, 13, 16);
+	clientip.copy(header, 13, 0, 4);
 	header.writeUInt16LE(clientport                   , 17);
-	header.copy(serverip, 0, 19, 22);
+	serverip.copy(header, 19, 0, 4);
 	header.writeUInt16LE(serverport                   , 23);
 	header.writeUInt32LE(data.length                  , 25);
 

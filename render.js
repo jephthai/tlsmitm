@@ -41,14 +41,22 @@ function message(stream) {
     this.timestamp  = this.header.readUInt32LE(4);
     this.relay      = this.header.readUInt32LE(8);
     this.direction  = this.header.readUInt8(12);
-    this.clientip   = this.header.readUInt32LE(13);
+    this.clientip   = renderIP(this.header.readUInt32BE(13));
     this.clientport = this.header.readUInt16LE(17);
-    this.serverip   = this.header.readUInt32LE(19);
+    this.serverip   = renderIP(this.header.readUInt32BE(19));
     this.serverport = this.header.readUInt16LE(23);
     this.length     = this.header.readUInt32LE(25);
 
     this.payload   = new Buffer(this.length);
     fs.readSync(stream, this.payload, 0, this.length, null);
+}
+
+function renderIP(value) {
+    var octet4 = value & 0xff;
+    var octet3 = (value >> 8) & 0xff;
+    var octet2 = (value >> 16) & 0xff;
+    var octet1 = (value >> 24) & 0xff;
+    return octet1 + "." + octet2 + "." + octet3 + "." + octet4;
 }
 
 function groupSessions(ms) {
@@ -98,8 +106,12 @@ var sessions = groupSessions(msgs);
 switch(process.argv[3]) {
 case "stats":
     console.log("Read " + msgs.length + " sessions");
-    for(var session in sessions) {
-	console.log("Session " + session + ", with " + sessions[session].length + " messages");
+    for(var index in sessions) {
+	var session = sessions[index];
+	var message = session[0];
+	var from    = message.clientip;
+	var to      = message.serverip;
+	console.log("Session " + index + ", from " + from + " to " + to + " with " + session.length + " messages");
     }
     break;
 case "session":
